@@ -15,6 +15,10 @@ public class ColorApproximation extends Thread{
 
     double percentComplete;
 
+    int[] imgColors;
+    Integer[] uniqueColors;
+    HashMap<Integer, Color> colorRef;
+
     public ColorApproximation() {
         this.file = null;
         this.palette = null;
@@ -52,15 +56,25 @@ public class ColorApproximation extends Thread{
         percentComplete = self.percentComplete;
     }
 
-    public void run() {
+
+    public void setUpColors(){
         // Get all colors in image
-        int[] imgColors = img.getAll();
+        imgColors = img.getAll();
         // Remove duplicate colors
-        Integer[] uniqueColors = removeDuplicates(imgColors);
+        uniqueColors = removeDuplicates(imgColors);
 
         // Generate color approximates and put into hash map
         percentComplete = 0;
-        HashMap<Integer, Color> colorRef = new HashMap<>();
+        colorRef = new HashMap<>();
+        for (int color : uniqueColors) {
+            colorRef.put(color, ColorCalc.getClosestColor(palette, new Color(color)));
+            percentComplete += (double)1/(uniqueColors.length+imgColors.length);
+        }
+    }
+
+    public void run() {
+        setUpColors();
+
         for (int color : uniqueColors) {
             colorRef.put(color, ColorCalc.getClosestColor(palette, new Color(color)));
             percentComplete += (double)1/(uniqueColors.length+imgColors.length);
