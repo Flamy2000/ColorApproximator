@@ -1,3 +1,5 @@
+package com.logicerror.ColorApproximator;
+
 import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;

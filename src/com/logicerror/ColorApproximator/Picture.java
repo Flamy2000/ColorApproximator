@@ -1,3 +1,5 @@
+package com.logicerror.ColorApproximator;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -6,8 +8,6 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static java.lang.System.out;
 
 public class Picture {
     String imgName;
@@ -28,6 +28,11 @@ public class Picture {
         } catch (IOException ex) {
             Logger.getLogger(Picture.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public Picture(BufferedImage bufImg, String imgName) {
+        this.bufImg = bufImg;
+        this.imgName = imgName;
     }
 
     public Picture(File file) {
@@ -77,8 +82,7 @@ public class Picture {
     }
 
     public int[] getAll(){
-        int[] intColors = bufImg.getRGB(0, 0, width(), height(), null, 0, width());
-        return intColors;
+        return bufImg.getRGB(0, 0, width(), height(), null, 0, width());
     }
 
     public void set(int col, int row, Color color) {

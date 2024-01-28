@@ -1,3 +1,5 @@
+package com.logicerror.ColorApproximator;
+
 import java.awt.*;
 
 public class ColorCalc {

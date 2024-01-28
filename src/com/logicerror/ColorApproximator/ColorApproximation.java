@@ -1,4 +1,7 @@
+package com.logicerror.ColorApproximator;
+
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
@@ -29,6 +32,11 @@ public class ColorApproximation extends Thread{
         this.file = file;
         this.palette = palette;
         createImage();
+    }
+
+    public ColorApproximation(BufferedImage buffImg, Color[] palette) {
+        this.img = new Picture(buffImg, "img");
+        outputImg = new Picture(buffImg, "img");
     }
 
 //    public ColorApproximation(File file, File palette_file) {
@@ -68,17 +76,20 @@ public class ColorApproximation extends Thread{
         colorRef = new HashMap<>();
         for (int color : uniqueColors) {
             colorRef.put(color, ColorCalc.getClosestColor(palette, new Color(color)));
-            percentComplete += (double)1/(uniqueColors.length+imgColors.length);
+            updatePercentageComplete(1);
         }
+    }
+
+    public HashMap<Integer, Color> getColorRef(){
+        return colorRef;
+    }
+
+    public int[] getImgColors(){
+        return imgColors;
     }
 
     public void run() {
         setUpColors();
-
-        for (int color : uniqueColors) {
-            colorRef.put(color, ColorCalc.getClosestColor(palette, new Color(color)));
-            percentComplete += (double)1/(uniqueColors.length+imgColors.length);
-        }
 
         // Set colors of image
 
@@ -88,12 +99,16 @@ public class ColorApproximation extends Thread{
             int x = i % width;
             int y = i / width;
             outputImg.set(x, y, colorRef.get(imgColors[i]));
-            percentComplete += (double)1/(uniqueColors.length+imgColors.length);
+            updatePercentageComplete(1);
         }
 
         if (callingInterface!= null) {
             callingInterface.runCompleted();
         }
+    }
+
+    public void updatePercentageComplete(int i){
+        percentComplete += (double)i/(uniqueColors.length+imgColors.length);
     }
 
     public double getPercentComplete(){

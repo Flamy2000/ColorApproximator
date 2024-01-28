@@ -1,3 +1,5 @@
+package com.logicerror.ColorApproximator;
+
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatGitHubDarkContrastIJTheme;
 
 import javax.imageio.ImageIO;
