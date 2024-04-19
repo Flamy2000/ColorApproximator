@@ -208,6 +208,10 @@ public class Picture {
         scaleValue(Math.round(width()*widthMult), Math.round(height()*heightMult));
     }
 
+    public BufferedImage getBufferedImage() {
+        return bufImg;
+    }
+
 
     /**
      * Represents an exception thrown when the image type is invalid.
