@@ -9,52 +9,73 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.io.FileOutputStream;
+
+
+/**
+ * Represents an image with various operations such as reading from file, manipulation, and display.
+ */
 public class Picture {
     String imgName;
     String imgPath;
     File imgFile;
     BufferedImage bufImg;
-    int width;
-    int height;
 
-    public Picture(String name) {
-        this.imgPath = name;
-        imgFile = new File(imgPath);
-        imgName = imgFile.getName();
-
-        verify_image();
-        try {
-            bufImg = ImageIO.read(imgFile);
-        } catch (IOException ex) {
-            Logger.getLogger(Picture.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    /**
+     * Constructs a Picture object from the specified image file path.
+     *
+     * @param path The path to the image file.
+     */
+    public Picture(String path) {
+        this(new File(path));
     }
 
-    public Picture(BufferedImage bufImg, String imgName) {
-        this.bufImg = bufImg;
-        this.imgName = imgName;
-    }
-
+    /**
+     * Constructs a Picture object from the specified image file.
+     *
+     * @param file The image file.
+     */
     public Picture(File file) {
         imgPath = file.getPath();
         imgFile = file;
         imgName = file.getName();
 
-        verify_image();
+        verify_image_type();
         try {
             bufImg = ImageIO.read(file);
         } catch (IOException ex) {
+            bufImg = null;
             Logger.getLogger(Picture.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public Picture(int w, int h) {
-        this.width = w;
-        this.height = h;
-        bufImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+    /**
+     * Constructs a Picture object from the provided BufferedImage.
+     *
+     * @param bufImg  The BufferedImage to be used.
+     * @param imgName The name to set the image.
+     */
+    public Picture(BufferedImage bufImg, String imgName) {
+        this.bufImg = bufImg;
+        this.imgName = imgName;
     }
 
-    private void verify_image() {
+    /**
+     * Constructs a Picture object with the specified width and height.
+     *
+     * @param w The width of the picture.
+     * @param h The height of the picture.
+     */
+    public Picture(int w, int h) {
+        bufImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+    }
+
+    /**
+     * Verifies if the image file has a valid type.
+     */
+    private void verify_image_type() {
         String[] valid_types = {"png", "jpg", "jpeg", "gif", "bmp", "webmp"};
         boolean valid = false;
         for (String type : valid_types){
@@ -66,44 +87,131 @@ public class Picture {
             throw new InvalidImageTypeException("Invalid Image Type: " + imgFile.getName());
         }
     }
+
+    /**
+     * Returns the width of the picture.
+     *
+     * @return The width of the picture.
+     */
     public int width() {
-        width = bufImg.getWidth();
-        return width;
+        return bufImg.getWidth();
     }
 
+    /**
+     * Returns the height of the picture.
+     *
+     * @return The height of the picture.
+     */
     public int height() {
-        height = bufImg.getHeight();
-        return height;
+        return bufImg.getHeight();
     }
 
-    public Color get(int col, int row) {
+    /**
+     * Gets the color of the pixel at the specified position.
+     *
+     * @param col The column index of the pixel.
+     * @param row The row index of the pixel.
+     * @return The color of the pixel.
+     */
+    public Color getPixelColor(int col, int row) {
         Color color = new Color(bufImg.getRGB(col, row));
         return color;
     }
 
-    public int[] getAll(){
+    /**
+     * Gets the colors of all pixels in the image.
+     *
+     * @return An int array containing the colors of all pixels.
+     */
+    public int[] getAllColors(){
         return bufImg.getRGB(0, 0, width(), height(), null, 0, width());
     }
 
+    /**
+     * Sets the color of a pixel at the specified position.
+     *
+     * @param col   The column index of the pixel.
+     * @param row   The row index of the pixel.
+     * @param color The color to set.
+     */
     public void set(int col, int row, Color color) {
         bufImg.setRGB(col, row, color.getRGB());
     }
 
+    /**
+     * Sets the color of the pixel at the specified position.
+     *
+     * @param col        The column index of the pixel.
+     * @param row        The row index of the pixel.
+     * @param int_color  The integer representation of the color.
+     */
     public void set(int col, int row, int int_color) {
         bufImg.setRGB(col, row, int_color);
     }
 
+    /**
+     * Displays the image in the default system application for viewing images.
+     */
     public void show() {
         try {
             File saveAs = new File(System.getProperty("java.io.tmpdir") + new Random().nextInt() + ".png");
-            ImageIO.write(bufImg, "png", saveAs);
-
+            try (FileOutputStream fos = new FileOutputStream(saveAs)) {
+                ImageIO.write(bufImg, "png", fos);
+            }
             Desktop.getDesktop().open(saveAs);
         } catch (IOException ex) {
             Logger.getLogger(Picture.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
+
+    /**
+     * Checks if the BufferedImage object (bufImg) is null and logs a message if it is.
+     *
+     * @param msg The message to be logged if bufImg is null.
+     * @return true if bufImg is null, false otherwise.
+     */
+    private boolean isImgNull(String msg) {
+        if (bufImg == null){
+            Logger.getLogger(Picture.class.getName()).log(Level.WARNING, msg, new RuntimeException());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Scales the image to the specified dimensions.
+     *
+     * @param newWidth  The new width of the image.
+     * @param newHeight The new height of the image.
+     */
+    public void scaleValue(int newWidth, int newHeight) {
+        if (isImgNull("Unable to scale null image")) {return;}
+
+        BufferedImage scaledImg = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = scaledImg.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g2d.drawImage(bufImg, 0, 0, newWidth, newHeight, null);
+        g2d.dispose();
+        bufImg = scaledImg;
+    }
+
+    /**
+     * Scales the image by the specified percentage.
+     *
+     * @param widthMult  The multiplier for the width.
+     * @param heightMult The multiplier for the height.
+     */
+    public void scalePercent(float widthMult, float heightMult){
+
+        if (isImgNull("Unable to scale null image")) {return;}
+        scaleValue(Math.round(width()*widthMult), Math.round(height()*heightMult));
+    }
+
+
+    /**
+     * Represents an exception thrown when the image type is invalid.
+     */
     public static class InvalidImageTypeException extends RuntimeException {
         public InvalidImageTypeException(String errorMessage, Throwable err) {
             super(errorMessage, err);
@@ -113,6 +221,5 @@ public class Picture {
             super(errorMessage);
         }
     }
-
 }
 

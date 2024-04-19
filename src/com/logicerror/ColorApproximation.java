@@ -67,7 +67,7 @@ public class ColorApproximation extends Thread{
 
     public void setUpColors(){
         // Get all colors in image
-        imgColors = img.getAll();
+        imgColors = img.getAllColors();
         // Remove duplicate colors
         uniqueColors = removeDuplicates(imgColors);
 
