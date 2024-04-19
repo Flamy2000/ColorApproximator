@@ -121,7 +121,6 @@ public class Interface extends JFrame {
 
     private void selectImageButton() {
         // JFileChooser points to user's default directory
-        System.out.println(System.getProperty("user.dir"));
         JFileChooser j = new JFileChooser(System.getProperty("user.dir") + "\\src\\res\\SampleImages");
         // FileSystemView.getFileSystemView().getHomeDirectory()
         //
