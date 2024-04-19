@@ -1,4 +1,4 @@
-package com.logicerror.ColorApproximator;
+package com.logicerror;
 
 import java.awt.*;
 import java.io.File;

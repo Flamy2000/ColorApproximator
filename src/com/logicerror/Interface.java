@@ -1,4 +1,4 @@
-package com.logicerror.ColorApproximator;
+package com.logicerror;
 
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatGitHubDarkContrastIJTheme;
 
@@ -121,7 +121,8 @@ public class Interface extends JFrame {
 
     private void selectImageButton() {
         // JFileChooser points to user's default directory
-        JFileChooser j = new JFileChooser(System.getProperty("user.dir") + "\\SampleImages");
+        System.out.println(System.getProperty("user.dir"));
+        JFileChooser j = new JFileChooser(System.getProperty("user.dir") + "\\src\\res\\SampleImages");
         // FileSystemView.getFileSystemView().getHomeDirectory()
         //
 
@@ -238,7 +239,7 @@ public class Interface extends JFrame {
     }
 
     public void createColorCheckBoxes(){
-        File folder = new File(System.getProperty("user.dir") + "\\Colors");
+        File folder = new File(System.getProperty("user.dir") + "\\src\\res\\Colors");
         File[] listOfFiles = folder.listFiles();
 
         if (listOfFiles == null) return;

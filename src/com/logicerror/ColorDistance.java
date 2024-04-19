@@ -1,8 +1,8 @@
-package com.logicerror.ColorApproximator;
+package com.logicerror;
 
 import java.awt.*;
 
-public class ColorCalc {
+public class ColorDistance {
     // Returns the distance between two RGB colors,
             // sometimes referred to as the "Redmean" algorithm
     public static double getColorDistance(float[] rgb1, float[] rgb2) {

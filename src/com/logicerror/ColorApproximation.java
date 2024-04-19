@@ -1,4 +1,4 @@
-package com.logicerror.ColorApproximator;
+package com.logicerror;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -75,7 +75,7 @@ public class ColorApproximation extends Thread{
         percentComplete = 0;
         colorRef = new HashMap<>();
         for (int color : uniqueColors) {
-            colorRef.put(color, ColorCalc.getClosestColor(palette, new Color(color)));
+            colorRef.put(color, ColorDistance.getClosestColor(palette, new Color(color)));
             updatePercentageComplete(1);
         }
     }
