@@ -229,7 +229,7 @@ public class Interface extends JFrame {
         {
             try {
                 File saveAs = new File(j.getCurrentDirectory().toString() + "\\" + j.getSelectedFile().getName() + ".png");
-                ImageIO.write(ca.getOutputImg().bufImg, "png", saveAs);
+                ImageIO.write(ca.getOutputImg().getBufferedImage(), "png", saveAs);
             } catch (IOException ex) {
                 Logger.getLogger(Picture.class.getName()).log(Level.SEVERE, null, ex);
             }

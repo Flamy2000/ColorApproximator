@@ -3,9 +3,11 @@ package com.logicerror;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,7 +23,18 @@ public class Picture {
     String imgName;
     String imgPath;
     File imgFile;
-    BufferedImage bufImg;
+    private BufferedImage bufImg;
+
+    public Picture(Picture picture) {
+        imgName = picture.imgName;
+        imgPath = picture.imgPath;
+        imgFile = picture.imgFile;
+
+        ColorModel cm = picture.bufImg.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = picture.bufImg.copyData(null);
+        bufImg = new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+    }
 
     /**
      * Constructs a Picture object from the specified image file path.
@@ -78,12 +91,12 @@ public class Picture {
     private void verify_image_type() {
         String[] valid_types = {"png", "jpg", "jpeg", "gif", "bmp", "webmp"};
         boolean valid = false;
-        for (String type : valid_types){
-            if (imgFile.getName().endsWith("." + type) || imgFile.getName().endsWith("." + type.toUpperCase())){
+        for (String type : valid_types) {
+            if (imgFile.getName().endsWith("." + type) || imgFile.getName().endsWith("." + type.toUpperCase())) {
                 valid = true;
             }
         }
-        if (!valid){
+        if (!valid) {
             throw new InvalidImageTypeException("Invalid Image Type: " + imgFile.getName());
         }
     }
@@ -123,7 +136,7 @@ public class Picture {
      *
      * @return An int array containing the colors of all pixels.
      */
-    public int[] getAllColors(){
+    public int[] getAllColors() {
         return bufImg.getRGB(0, 0, width(), height(), null, 0, width());
     }
 
@@ -141,9 +154,9 @@ public class Picture {
     /**
      * Sets the color of the pixel at the specified position.
      *
-     * @param col        The column index of the pixel.
-     * @param row        The row index of the pixel.
-     * @param int_color  The integer representation of the color.
+     * @param col       The column index of the pixel.
+     * @param row       The row index of the pixel.
+     * @param int_color The integer representation of the color.
      */
     public void set(int col, int row, int int_color) {
         bufImg.setRGB(col, row, int_color);
@@ -172,7 +185,7 @@ public class Picture {
      * @return true if bufImg is null, false otherwise.
      */
     private boolean isImgNull(String msg) {
-        if (bufImg == null){
+        if (bufImg == null) {
             Logger.getLogger(Picture.class.getName()).log(Level.WARNING, msg, new RuntimeException());
             return true;
         }
@@ -186,7 +199,9 @@ public class Picture {
      * @param newHeight The new height of the image.
      */
     public void scaleValue(int newWidth, int newHeight) {
-        if (isImgNull("Unable to scale null image")) {return;}
+        if (isImgNull("Unable to scale null image")) {
+            return;
+        }
 
         BufferedImage scaledImg = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = scaledImg.createGraphics();
@@ -202,11 +217,35 @@ public class Picture {
      * @param widthMult  The multiplier for the width.
      * @param heightMult The multiplier for the height.
      */
-    public void scalePercent(float widthMult, float heightMult){
+    public void scalePercent(float widthMult, float heightMult) {
 
-        if (isImgNull("Unable to scale null image")) {return;}
-        scaleValue(Math.round(width()*widthMult), Math.round(height()*heightMult));
+        if (isImgNull("Unable to scale null image")) {
+            return;
+        }
+        scaleValue(Math.round(width() * widthMult), Math.round(height() * heightMult));
     }
+
+    /**
+     * Degrades image by scaling down and then back up.
+     * Intended for use before color approximation to round edges.
+     * @param widthFactor  The modifier for the width.
+     * @param heightFactor  The modifier for the height.
+     */
+    public void degrade(float widthFactor, float heightFactor){
+        scalePercent(1/widthFactor, 1/heightFactor);
+        scalePercent(widthFactor, heightFactor);
+    }
+
+    /**
+     * Degrades image by scaling down and then back up.
+     * Intended for use before color approximation to round edges.
+     * @param factor  The modifier for smoothing.
+     */
+    public void degrade(float factor){
+        scalePercent(1/factor, 1/factor);
+        scalePercent(factor, factor);
+    }
+
 
     public BufferedImage getBufferedImage() {
         return bufImg;
@@ -226,4 +265,5 @@ public class Picture {
         }
     }
 }
+
 
