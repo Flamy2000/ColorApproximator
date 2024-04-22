@@ -2,7 +2,6 @@ package com.logicerror;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ColorApproximation extends Thread{
     File file;
@@ -80,6 +78,7 @@ public class ColorApproximation extends Thread{
     }
 
     private static final int BATCH_SIZE = 5000; // Adjust batch size as needed
+    private static final int THREAD_COUNT = 4;
 
     public void run() {
         // Get all colors in image
@@ -90,45 +89,52 @@ public class ColorApproximation extends Thread{
         // Generate color approximates and put into hash map
         colorRef = new ConcurrentHashMap<>(); // ConcurrentHashMap for thread safety
 
-        int totalColors = uniqueColors.length;
+        int totalUniqueColors = uniqueColors.length;
         int totalPixelBatches = (int) Math.ceil((double) imgColors.length / BATCH_SIZE);
-        int totalTasks = totalColors + totalPixelBatches;
+        int totalTasks = totalUniqueColors + totalPixelBatches;
         final int[] tasksCompleted = {0}; // Initialize the completed tasks counter
         updatePercentageComplete(tasksCompleted[0], totalTasks);
 
-        ExecutorService executor = Executors.newFixedThreadPool(4); // Adjust thread pool size as needed
+        try (ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT)) { // Adjust thread pool size as needed
 
-        // Calculate closest matches for unique colors in parallel
-        for (int i = 0; i < totalColors; i += BATCH_SIZE) {
-            final int startIndex = i;
-            final int endIndex = Math.min(i + BATCH_SIZE, totalColors);
-            executor.execute(() -> {
-                batchProcessColors(startIndex, endIndex);
-                synchronized (this) {
-                    tasksCompleted[0]++; // Increment completed tasks counter
-                    updatePercentageComplete(tasksCompleted[0], totalTasks); // Update progress
-                }
-            });
+            // Calculate closest matches for unique colors in parallel
+            for (int i = 0; i < totalUniqueColors; i += BATCH_SIZE) {
+                final int startIndex = i;
+                final int endIndex = Math.min(i + BATCH_SIZE, totalUniqueColors);
+                executor.execute(() -> {
+                    batchProcessColors(startIndex, endIndex);
+                    synchronized (this) {
+                        tasksCompleted[0]++; // Increment completed tasks counter
+                        updatePercentageComplete(tasksCompleted[0], totalTasks); // Update progress
+                    }
+                });
+            }
+
+            executor.shutdown();
+            while (!executor.isTerminated()) {
+                // Wait for all tasks to finish
+            }
         }
+        try (ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT)) {
 
-        // Set colors for the entire image
-        for (int i = 0; i < imgColors.length; i += BATCH_SIZE) {
-            final int startIndex = i;
-            final int endIndex = Math.min(i + BATCH_SIZE, imgColors.length);
-            executor.execute(() -> {
-                batchProcessImageColors(startIndex, endIndex, img.width());
-                synchronized (this) {
-                    tasksCompleted[0]++; // Increment completed tasks counter
-                    updatePercentageComplete(tasksCompleted[0], totalTasks); // Update progress
-                }
-            });
+            // Set colors for the entire image
+            for (int i = 0; i < imgColors.length; i += BATCH_SIZE) {
+                final int startIndex = i;
+                final int endIndex = Math.min(i + BATCH_SIZE, imgColors.length);
+                executor.execute(() -> {
+                    batchProcessImageSet(startIndex, endIndex, img.width());
+                    synchronized (this) {
+                        tasksCompleted[0]++; // Increment completed tasks counter
+                        updatePercentageComplete(tasksCompleted[0], totalTasks); // Update progress
+                    }
+                });
+            }
+
+            executor.shutdown();
+            while (!executor.isTerminated()) {
+                // Wait for all tasks to finish
+            }
         }
-
-        executor.shutdown();
-        while (!executor.isTerminated()) {
-            // Wait for all tasks to finish
-        }
-
         // Ensure the progress reaches 100% when all tasks are completed
         updatePercentageComplete(totalTasks, totalTasks);
 
@@ -145,7 +151,7 @@ public class ColorApproximation extends Thread{
         }
     }
 
-    public void batchProcessImageColors(int startIndex, int endIndex, int width) {
+    public void batchProcessImageSet(int startIndex, int endIndex, int width) {
         for (int i = startIndex; i < endIndex; i++) {
             int x = i % width;
             int y = i / width;
